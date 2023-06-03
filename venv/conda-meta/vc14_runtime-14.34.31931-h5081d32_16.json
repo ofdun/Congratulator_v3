@@ -1,0 +1,226 @@
+{
+  "build": "h5081d32_16",
+  "build_number": 16,
+  "channel": "https://conda.anaconda.org/conda-forge/win-64",
+  "constrains": [
+    "vs2015_runtime 14.34.31931.* *_16"
+  ],
+  "depends": [
+    "ucrt >=10.0.20348.0"
+  ],
+  "extracted_package_dir": "C:\\Users\\elik3\\anaconda3\\pkgs\\vc14_runtime-14.34.31931-h5081d32_16",
+  "features": "",
+  "files": [
+    "Library/bin/concrt140.dll",
+    "Library/bin/msvcp140.dll",
+    "Library/bin/msvcp140_1.dll",
+    "Library/bin/msvcp140_2.dll",
+    "Library/bin/msvcp140_atomic_wait.dll",
+    "Library/bin/msvcp140_codecvt_ids.dll",
+    "Library/bin/vcamp140.dll",
+    "Library/bin/vccorlib140.dll",
+    "Library/bin/vcomp140.dll",
+    "Library/bin/vcruntime140.dll",
+    "Library/bin/vcruntime140_1.dll",
+    "concrt140.dll",
+    "msvcp140.dll",
+    "msvcp140_1.dll",
+    "msvcp140_2.dll",
+    "msvcp140_atomic_wait.dll",
+    "msvcp140_codecvt_ids.dll",
+    "vcamp140.dll",
+    "vccorlib140.dll",
+    "vcomp140.dll",
+    "vcruntime140.dll",
+    "vcruntime140_1.dll",
+    ".nonadmin"
+  ],
+  "fn": "vc14_runtime-14.34.31931-h5081d32_16.conda",
+  "license": "LicenseRef-ProprietaryMicrosoft",
+  "license_family": "Proprietary",
+  "link": {
+    "source": "C:\\Users\\elik3\\anaconda3\\pkgs\\vc14_runtime-14.34.31931-h5081d32_16",
+    "type": 1
+  },
+  "md5": "22125178654c6a8a393f9743d585704b",
+  "name": "vc14_runtime",
+  "package_tarball_full_path": "C:\\Users\\elik3\\anaconda3\\pkgs\\vc14_runtime-14.34.31931-h5081d32_16.conda",
+  "paths_data": {
+    "paths": [
+      {
+        "_path": "Library/bin/concrt140.dll",
+        "no_link": true,
+        "path_type": "hardlink",
+        "sha256": "0ce53545b7d6e1fe5451df4822d3d59b6806c00d0c69c0813e7a4efc2cf92a86",
+        "sha256_in_prefix": "0ce53545b7d6e1fe5451df4822d3d59b6806c00d0c69c0813e7a4efc2cf92a86",
+        "size_in_bytes": 327504
+      },
+      {
+        "_path": "Library/bin/msvcp140.dll",
+        "no_link": true,
+        "path_type": "hardlink",
+        "sha256": "cb3c74d6fcc091f4eb7c67ee5eb5f76c1c973dea8b1c6b851fcca62c2a9d8aa8",
+        "sha256_in_prefix": "cb3c74d6fcc091f4eb7c67ee5eb5f76c1c973dea8b1c6b851fcca62c2a9d8aa8",
+        "size_in_bytes": 579920
+      },
+      {
+        "_path": "Library/bin/msvcp140_1.dll",
+        "no_link": true,
+        "path_type": "hardlink",
+        "sha256": "8e49a6d937ee6ac20d949629b54e28caf01aef312bc7184063280346b35899e3",
+        "sha256_in_prefix": "8e49a6d937ee6ac20d949629b54e28caf01aef312bc7184063280346b35899e3",
+        "size_in_bytes": 35664
+      },
+      {
+        "_path": "Library/bin/msvcp140_2.dll",
+        "no_link": true,
+        "path_type": "hardlink",
+        "sha256": "25305353c51ac72f4646bd549493becdbd6c997605f70c937e72cad3f962182d",
+        "sha256_in_prefix": "25305353c51ac72f4646bd549493becdbd6c997605f70c937e72cad3f962182d",
+        "size_in_bytes": 197456
+      },
+      {
+        "_path": "Library/bin/msvcp140_atomic_wait.dll",
+        "no_link": true,
+        "path_type": "hardlink",
+        "sha256": "6816a8212a20072e5d34d56d9bdc3c8fd8ee0759343a7936d237622f30e2508a",
+        "sha256_in_prefix": "6816a8212a20072e5d34d56d9bdc3c8fd8ee0759343a7936d237622f30e2508a",
+        "size_in_bytes": 50000
+      },
+      {
+        "_path": "Library/bin/msvcp140_codecvt_ids.dll",
+        "no_link": true,
+        "path_type": "hardlink",
+        "sha256": "478e7a1eec4e4d80a2600da355a0bd741505cd6bd33ae8e8b1604b66ff94711b",
+        "sha256_in_prefix": "478e7a1eec4e4d80a2600da355a0bd741505cd6bd33ae8e8b1604b66ff94711b",
+        "size_in_bytes": 31568
+      },
+      {
+        "_path": "Library/bin/vcamp140.dll",
+        "no_link": true,
+        "path_type": "hardlink",
+        "sha256": "33bfaf7ec048215b7ce55f61444a5361309ba01b73ad40c192fd647a676e63c3",
+        "sha256_in_prefix": "33bfaf7ec048215b7ce55f61444a5361309ba01b73ad40c192fd647a676e63c3",
+        "size_in_bytes": 414544
+      },
+      {
+        "_path": "Library/bin/vccorlib140.dll",
+        "no_link": true,
+        "path_type": "hardlink",
+        "sha256": "d7731a1df856d0a19344fd0b80dadd4e4be6b6136236fba6543bb66c1f015e81",
+        "sha256_in_prefix": "d7731a1df856d0a19344fd0b80dadd4e4be6b6136236fba6543bb66c1f015e81",
+        "size_in_bytes": 345936
+      },
+      {
+        "_path": "Library/bin/vcomp140.dll",
+        "no_link": true,
+        "path_type": "hardlink",
+        "sha256": "cb721f775cdee730d9d69ebd9e723c05a99ee1805f8d23a52a74fc015aa3d965",
+        "sha256_in_prefix": "cb721f775cdee730d9d69ebd9e723c05a99ee1805f8d23a52a74fc015aa3d965",
+        "size_in_bytes": 191824
+      },
+      {
+        "_path": "Library/bin/vcruntime140.dll",
+        "no_link": true,
+        "path_type": "hardlink",
+        "sha256": "76fdb83fde238226b5bebaf3392ee562e2cb7ca8d3ef75983bf5f9d6c7119644",
+        "sha256_in_prefix": "76fdb83fde238226b5bebaf3392ee562e2cb7ca8d3ef75983bf5f9d6c7119644",
+        "size_in_bytes": 109392
+      },
+      {
+        "_path": "Library/bin/vcruntime140_1.dll",
+        "no_link": true,
+        "path_type": "hardlink",
+        "sha256": "e0b66601cc28ecb171c3d4b7ac690c667f47da6b6183bff80604c84c00d265ab",
+        "sha256_in_prefix": "e0b66601cc28ecb171c3d4b7ac690c667f47da6b6183bff80604c84c00d265ab",
+        "size_in_bytes": 49488
+      },
+      {
+        "_path": "concrt140.dll",
+        "path_type": "hardlink",
+        "sha256": "0ce53545b7d6e1fe5451df4822d3d59b6806c00d0c69c0813e7a4efc2cf92a86",
+        "sha256_in_prefix": "0ce53545b7d6e1fe5451df4822d3d59b6806c00d0c69c0813e7a4efc2cf92a86",
+        "size_in_bytes": 327504
+      },
+      {
+        "_path": "msvcp140.dll",
+        "path_type": "hardlink",
+        "sha256": "cb3c74d6fcc091f4eb7c67ee5eb5f76c1c973dea8b1c6b851fcca62c2a9d8aa8",
+        "sha256_in_prefix": "cb3c74d6fcc091f4eb7c67ee5eb5f76c1c973dea8b1c6b851fcca62c2a9d8aa8",
+        "size_in_bytes": 579920
+      },
+      {
+        "_path": "msvcp140_1.dll",
+        "path_type": "hardlink",
+        "sha256": "8e49a6d937ee6ac20d949629b54e28caf01aef312bc7184063280346b35899e3",
+        "sha256_in_prefix": "8e49a6d937ee6ac20d949629b54e28caf01aef312bc7184063280346b35899e3",
+        "size_in_bytes": 35664
+      },
+      {
+        "_path": "msvcp140_2.dll",
+        "path_type": "hardlink",
+        "sha256": "25305353c51ac72f4646bd549493becdbd6c997605f70c937e72cad3f962182d",
+        "sha256_in_prefix": "25305353c51ac72f4646bd549493becdbd6c997605f70c937e72cad3f962182d",
+        "size_in_bytes": 197456
+      },
+      {
+        "_path": "msvcp140_atomic_wait.dll",
+        "path_type": "hardlink",
+        "sha256": "6816a8212a20072e5d34d56d9bdc3c8fd8ee0759343a7936d237622f30e2508a",
+        "sha256_in_prefix": "6816a8212a20072e5d34d56d9bdc3c8fd8ee0759343a7936d237622f30e2508a",
+        "size_in_bytes": 50000
+      },
+      {
+        "_path": "msvcp140_codecvt_ids.dll",
+        "path_type": "hardlink",
+        "sha256": "478e7a1eec4e4d80a2600da355a0bd741505cd6bd33ae8e8b1604b66ff94711b",
+        "sha256_in_prefix": "478e7a1eec4e4d80a2600da355a0bd741505cd6bd33ae8e8b1604b66ff94711b",
+        "size_in_bytes": 31568
+      },
+      {
+        "_path": "vcamp140.dll",
+        "path_type": "hardlink",
+        "sha256": "33bfaf7ec048215b7ce55f61444a5361309ba01b73ad40c192fd647a676e63c3",
+        "sha256_in_prefix": "33bfaf7ec048215b7ce55f61444a5361309ba01b73ad40c192fd647a676e63c3",
+        "size_in_bytes": 414544
+      },
+      {
+        "_path": "vccorlib140.dll",
+        "path_type": "hardlink",
+        "sha256": "d7731a1df856d0a19344fd0b80dadd4e4be6b6136236fba6543bb66c1f015e81",
+        "sha256_in_prefix": "d7731a1df856d0a19344fd0b80dadd4e4be6b6136236fba6543bb66c1f015e81",
+        "size_in_bytes": 345936
+      },
+      {
+        "_path": "vcomp140.dll",
+        "path_type": "hardlink",
+        "sha256": "cb721f775cdee730d9d69ebd9e723c05a99ee1805f8d23a52a74fc015aa3d965",
+        "sha256_in_prefix": "cb721f775cdee730d9d69ebd9e723c05a99ee1805f8d23a52a74fc015aa3d965",
+        "size_in_bytes": 191824
+      },
+      {
+        "_path": "vcruntime140.dll",
+        "path_type": "hardlink",
+        "sha256": "76fdb83fde238226b5bebaf3392ee562e2cb7ca8d3ef75983bf5f9d6c7119644",
+        "sha256_in_prefix": "76fdb83fde238226b5bebaf3392ee562e2cb7ca8d3ef75983bf5f9d6c7119644",
+        "size_in_bytes": 109392
+      },
+      {
+        "_path": "vcruntime140_1.dll",
+        "path_type": "hardlink",
+        "sha256": "e0b66601cc28ecb171c3d4b7ac690c667f47da6b6183bff80604c84c00d265ab",
+        "sha256_in_prefix": "e0b66601cc28ecb171c3d4b7ac690c667f47da6b6183bff80604c84c00d265ab",
+        "size_in_bytes": 49488
+      }
+    ],
+    "paths_version": 1
+  },
+  "requested_spec": "None",
+  "sha256": "1161f4848e1c0663897a6324fbc4ff13dafd11650b42c9864428da73593dda95",
+  "size": 726275,
+  "subdir": "win-64",
+  "timestamp": 1683185768485,
+  "track_features": "",
+  "url": "https://conda.anaconda.org/conda-forge/win-64/vc14_runtime-14.34.31931-h5081d32_16.conda",
+  "version": "14.34.31931"
+}
