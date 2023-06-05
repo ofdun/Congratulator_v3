@@ -146,10 +146,9 @@ def get_all_todays_postcards(todays_holidays: List[Holiday]) -> List[Postcard]:
 
     # Get the download url and headers of the stream
     download_url = stream.url
-    headers = {"User-Agent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/58.0.3029.110 Safari/537.3"}
-
+    
     # Download the video using requests library
-    response = requests.get(download_url, headers=headers)
+    response = requests.get(download_url)
 
     # Save the downloaded video to file
     with open('cache/video.mp4', 'wb') as f:
