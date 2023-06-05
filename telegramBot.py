@@ -135,14 +135,26 @@ def get_all_todays_postcards(todays_holidays: List[Holiday]) -> List[Postcard]:
     #             postcards.append(
     #                 Postcard(holiday=todays_holiday.name, href=href))
     import requests
+    from pytube import YouTube
 
-    url = 'https://www.ssyoutube.com/watch?v=jtZSnB6XevY'
+    # Define the YouTube video url
+    url = "https://www.youtube.com/watch?v=jtZSnB6XevY"
 
-    response = requests.get(url)
-    video = response.content
+    # Create a YouTube object and get the highest quality stream
+    yt = YouTube(url)
+    stream = yt.streams.get_highest_resolution()
 
+    # Get the download url and headers of the stream
+    download_url = stream.url
+    headers = {"User-Agent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/58.0.3029.110 Safari/537.3"}
+
+    # Download the video using requests library
+    response = requests.get(download_url, headers=headers)
+
+    # Save the downloaded video to file
     with open('cache/video.mp4', 'wb') as f:
-        f.write(video)
+        f.write(response.content)
+
 
     #     for page in range(2, number_of_pages + 1):
     #         response = requests.get(todays_holiday.href + f'page-{page}/')
