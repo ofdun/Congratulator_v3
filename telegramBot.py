@@ -9,6 +9,7 @@ from typing import List
 from bs4 import BeautifulSoup as bs
 import requests
 from dataclasses import dataclass
+from pathlib import Path
 
 TOKEN = os.getenv("TOKEN")
 bot = TeleBot(TOKEN)
@@ -94,7 +95,7 @@ def get_all_todays_holidays_links() -> List[Holiday]:
             name_of_holiday = album_info[0].find('strong').text
             href = tag.find('a').get('href')
             hrefs.append(Holiday(name=name_of_holiday, href=href))
-            
+
     return hrefs
 
 
@@ -116,47 +117,138 @@ def get_number_of_pages(parsed_page: bs) -> int:
 
 
 def get_all_todays_postcards(todays_holidays: List[Holiday]) -> List[Postcard]:
-    postcards: List[Postcard] = []
-    for todays_holiday in todays_holidays:
-        response = requests.get(todays_holiday.href)
+    # postcards: List[Postcard] = []
+
+    # for todays_holiday in todays_holidays:
+    #     response = requests.get(todays_holiday.href)
+    #     if response.status_code != 200:
+    #         print(
+    #             f'Error while trying to get todays pictures! HTTP status code is {response.status_code}')
+    #         return []
+    #     soup = bs(response.content, 'html.parser')
+    #     number_of_pages = get_number_of_pages(soup)
+    #     for image_tag in soup.find_all('img'):
+    #         print(image_tag)
+    #         href = image_tag.get('data-url')
+    #         if href:
+    #             href = href[:href.rfind('?')]
+    #             postcards.append(
+    #                 Postcard(holiday=todays_holiday.name, href=href))
+    import requests
+
+    url = 'https://www.ssyoutube.com/watch?v=jtZSnB6XevY'
+
+    response = requests.get(url)
+    video = response.content
+
+    with open('cache/video.mp4', 'wb') as f:
+        f.write(video)
+
+    #     for page in range(2, number_of_pages + 1):
+    #         response = requests.get(todays_holiday.href + f'page-{page}/')
+    #         if response.status_code != 200:
+    #             print(
+    #                 f'Error while trying to get todays pictures! HTTP status code is {response.status_code}')
+    #             return []
+    #         soup = bs(response.content, 'html.parser')
+    #         for image_tag in soup.find_all('img'):
+    #             href = image_tag.get('src')
+    #             if href:
+    #                 href = href[:href.rfind('?')]
+    #                 postcards.append(
+    #                     Postcard(holiday=todays_holiday.name, href=href))
+    number_of_pages = 1
+    
+    def youtube_href_to_download_href(youtube_href: str) -> str:
+        pass
+
+    def get_if_it_is_youtube_href(href: str) -> bool:
+        for i in range(len(href)):
+            if href[-i] == '.':
+                return False
+            elif href[-i] == '/':
+                return True
+
+    def get_picture_href_from_its_page(page_href: str) -> str:
+        response = requests.get(page_href)
+        if response.status_code != 200:
+            print(
+                f'Error while trying to get picture through its own page! HTTP status code is {response.status_code}')
+            return ''
+        soup = bs(response.content, 'html.parser')
+        button = soup.find(id='download-card-button')
+        href = button.get('href')
+        if get_if_it_is_youtube_href(href):
+            href = youtube_href_to_download_href()
+        return href
+
+    def get_postcards_hrefs_from_page(todays_holiday: Holiday, first_use: bool = False, page: int = 0) -> List[Postcard]:
+        postcards = []
+        if page:
+            response = requests.get(todays_holiday.href + f'page-{page}/')
+        else:
+            response = requests.get(todays_holiday.href)
         if response.status_code != 200:
             print(
                 f'Error while trying to get todays pictures! HTTP status code is {response.status_code}')
             return []
         soup = bs(response.content, 'html.parser')
-        number_of_pages = get_number_of_pages(soup)
-        for image_tag in soup.find_all('img'):
-            href = image_tag.get('data-url')
-            if href:
-                href = href[:href.rfind('?')]
-                postcards.append(
-                    Postcard(holiday=todays_holiday.name, href=href))
-        
-        for page in range(2, number_of_pages + 1):
-            response = requests.get(todays_holiday.href + f'page-{page}/')
-            if response.status_code != 200:
-                print(
-                    f'Error while trying to get todays pictures! HTTP status code is {response.status_code}')
-                return []
-            soup = bs(response.content, 'html.parser')
+        if first_use:
+            nonlocal number_of_pages
             number_of_pages = get_number_of_pages(soup)
-            for image_tag in soup.find_all('img'):
-                href = image_tag.get('data-url')
-                if href:
-                    href = href[:href.rfind('?')]
-                    postcards.append(
-                        Postcard(holiday=todays_holiday.name, href=href))
-    
+        for card in soup.find_all(class_='card'):
+            pictures_page = card.find('a').get('href')
+            href = get_picture_href_from_its_page(pictures_page)
+            postcards.append(href)
+
+        return postcards
+
+    for todays_holiday in todays_holidays:
+        postcards: List[Postcard] = get_postcards_hrefs_from_page(
+            todays_holiday=todays_holiday, first_use=True)
+        for page in range(2, number_of_pages + 1):
+            postcards.extend(get_postcards_hrefs_from_page(
+                todays_holiday=todays_holiday, page=page))
+
     return postcards
+
 
 def get_todays_postcards_hrefs() -> List[Postcard]:
     hrefs = get_all_todays_holidays_links()
     postcards = get_all_todays_postcards(hrefs)
-    
     return postcards
 
-def get_data() -> None:
-    pass
+
+def download_postcard_to_cache_folder(file_url: str) -> None:
+    response = requests.get(file_url)
+    if response.status_code != 200:
+        print(
+            f'Error while downloading a picture! Http status code: {response.status_code}')
+        return
+    image = response.content
+    filename = datetime.now().strftime("%Y_%m_%d_%H_%M_%S_%f") + '.jpg'
+    print(filename, file_url)
+    return
+    current_path = Path(__file__).parent.resolve()
+    if not os.path.exists('cache'):
+        os.makedirs('cache')
+    path_to_file = current_path / "cache" / filename
+    with open(path_to_file, 'wb') as f:
+        f.write(image)
+
+
+def download_all_postcards(todays_postcards: List[Postcard]) -> None:
+    for postcard in todays_postcards:
+        download_postcard_to_cache_folder(postcard.href)
+
+
+def test() -> None:
+    hrefs = get_all_todays_holidays_links()
+    urls = get_all_todays_postcards(hrefs)
+    download_all_postcards(urls)
+
+
+test()
 
 
 def send_file(chat_id, markup) -> None:
@@ -186,7 +278,7 @@ def start_nonestop_poling() -> None:
             sleep(5)
 
 
-if __name__ == "__main__":
-    Thread(target=start_step_handlers).start()
+# if __name__ == "__main__":
+#     Thread(target=start_step_handlers).start()
 
-    Thread(target=start_nonestop_poling).start()
+#     Thread(target=start_nonestop_poling).start()
