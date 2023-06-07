@@ -10,6 +10,11 @@ from bs4 import BeautifulSoup as bs
 import requests
 from dataclasses import dataclass
 from pathlib import Path
+from pytube import YouTube
+from random import choice
+from telebot.apihelper import ApiTelegramException
+import schedule
+from exceptions import *
 
 TOKEN = os.getenv("TOKEN")
 bot = TeleBot(TOKEN)
@@ -47,6 +52,7 @@ def main(message: Message) -> None:
         bot.send_message(chat_id, message_text, reply_markup=markup)
         return
     elif message_text == 'Подключить рассылку📬':
+        # TODO mailing
         pass
 
     bot.send_message(chat_id=chat_id, text="Test", reply_markup=markup)
@@ -81,7 +87,7 @@ def get_all_todays_holidays_links() -> List[Holiday]:
     if response.status_code != 200:
         print(
             f'Error while trying to get todays holidays! HTTP status code is {response.status_code}')
-        return []
+        raise NoResponseFromTheSite(f"HTTP status code = {response.status_code}")
 
     hrefs = []
     today = str(datetime.today().day)
@@ -117,61 +123,13 @@ def get_number_of_pages(parsed_page: bs) -> int:
 
 
 def get_all_todays_postcards(todays_holidays: List[Holiday]) -> List[Postcard]:
-    # postcards: List[Postcard] = []
-
-    # for todays_holiday in todays_holidays:
-    #     response = requests.get(todays_holiday.href)
-    #     if response.status_code != 200:
-    #         print(
-    #             f'Error while trying to get todays pictures! HTTP status code is {response.status_code}')
-    #         return []
-    #     soup = bs(response.content, 'html.parser')
-    #     number_of_pages = get_number_of_pages(soup)
-    #     for image_tag in soup.find_all('img'):
-    #         print(image_tag)
-    #         href = image_tag.get('data-url')
-    #         if href:
-    #             href = href[:href.rfind('?')]
-    #             postcards.append(
-    #                 Postcard(holiday=todays_holiday.name, href=href))
-    import requests
-    from pytube import YouTube
-
-    # Define the YouTube video url
-    url = "https://www.youtube.com/watch?v=jtZSnB6XevY"
-
-    # Create a YouTube object and get the highest quality stream
-    yt = YouTube(url)
-    stream = yt.streams.get_highest_resolution()
-
-    # Get the download url and headers of the stream
-    download_url = stream.url
-    
-    # Download the video using requests library
-    response = requests.get(download_url)
-
-    # Save the downloaded video to file
-    with open('cache/video.mp4', 'wb') as f:
-        f.write(response.content)
-
-
-    #     for page in range(2, number_of_pages + 1):
-    #         response = requests.get(todays_holiday.href + f'page-{page}/')
-    #         if response.status_code != 200:
-    #             print(
-    #                 f'Error while trying to get todays pictures! HTTP status code is {response.status_code}')
-    #             return []
-    #         soup = bs(response.content, 'html.parser')
-    #         for image_tag in soup.find_all('img'):
-    #             href = image_tag.get('src')
-    #             if href:
-    #                 href = href[:href.rfind('?')]
-    #                 postcards.append(
-    #                     Postcard(holiday=todays_holiday.name, href=href))
     number_of_pages = 1
     
     def youtube_href_to_download_href(youtube_href: str) -> str:
-        pass
+        yt = YouTube(youtube_href)
+        stream = yt.streams.get_highest_resolution()
+        download_url = stream.url
+        return download_url
 
     def get_if_it_is_youtube_href(href: str) -> bool:
         for i in range(len(href)):
@@ -185,16 +143,16 @@ def get_all_todays_postcards(todays_holidays: List[Holiday]) -> List[Postcard]:
         if response.status_code != 200:
             print(
                 f'Error while trying to get picture through its own page! HTTP status code is {response.status_code}')
-            return ''
+            raise NoResponseFromPicturesPage(f"HTTP status code = {response.status_code}")
         soup = bs(response.content, 'html.parser')
         button = soup.find(id='download-card-button')
         href = button.get('href')
         if get_if_it_is_youtube_href(href):
-            href = youtube_href_to_download_href()
+            href = youtube_href_to_download_href(href)
         return href
 
     def get_postcards_hrefs_from_page(todays_holiday: Holiday, first_use: bool = False, page: int = 0) -> List[Postcard]:
-        postcards = []
+        postcards: List[Postcard] = []
         if page:
             response = requests.get(todays_holiday.href + f'page-{page}/')
         else:
@@ -202,7 +160,7 @@ def get_all_todays_postcards(todays_holidays: List[Holiday]) -> List[Postcard]:
         if response.status_code != 200:
             print(
                 f'Error while trying to get todays pictures! HTTP status code is {response.status_code}')
-            return []
+            raise NoResponseFromTheHolidaysPage(f"HTTP status code = {response.status_code}")
         soup = bs(response.content, 'html.parser')
         if first_use:
             nonlocal number_of_pages
@@ -210,7 +168,8 @@ def get_all_todays_postcards(todays_holidays: List[Holiday]) -> List[Postcard]:
         for card in soup.find_all(class_='card'):
             pictures_page = card.find('a').get('href')
             href = get_picture_href_from_its_page(pictures_page)
-            postcards.append(href)
+            postcard = Postcard(holiday=todays_holiday.name, href=href)
+            postcards.append(postcard)
 
         return postcards
 
@@ -235,11 +194,13 @@ def download_postcard_to_cache_folder(file_url: str) -> None:
     if response.status_code != 200:
         print(
             f'Error while downloading a picture! Http status code: {response.status_code}')
-        return
+        return NoResponseFromPicturesDownloadHref(f"HTTP status code = {response.status_code}")
     image = response.content
-    filename = datetime.now().strftime("%Y_%m_%d_%H_%M_%S_%f") + '.jpg'
-    print(filename, file_url)
-    return
+    if file_url[-4] != '.':
+        addition = '.mp4'
+    else:
+        addition = file_url[-4:]
+    filename = datetime.now().strftime("%Y_%m_%d_%H_%M_%S_%f") + addition
     current_path = Path(__file__).parent.resolve()
     if not os.path.exists('cache'):
         os.makedirs('cache')
@@ -251,28 +212,52 @@ def download_postcard_to_cache_folder(file_url: str) -> None:
 def download_all_postcards(todays_postcards: List[Postcard]) -> None:
     for postcard in todays_postcards:
         download_postcard_to_cache_folder(postcard.href)
+        
+def clear_postcards() -> None:
+    for filename in os.listdir('cache'):
+        os.remove('cache/' + filename)
 
 
-def test() -> None:
-    hrefs = get_all_todays_holidays_links()
-    urls = get_all_todays_postcards(hrefs)
-    download_all_postcards(urls)
+def download_todays_postcards() -> None:
+    clear_postcards()
+    todays_holidays_hrefs = get_all_todays_holidays_links()
+    todays_postcards_hrefs = get_all_todays_postcards(todays_holidays_hrefs)
+    download_all_postcards(todays_postcards_hrefs)
+    
+def get_random_picture() -> str:
+    if not os.listdir('cache/'):
+        raise NoPictureAvailable("There is no holidays today :(")
+    return choice([filename for filename in os.listdir('cache/')])
 
-
-test()
-
+def check_if_video(path: Path) -> bool:
+    format_ = path.suffix
+    return format_ in VIDEO_FORMATS
 
 def send_file(chat_id, markup) -> None:
-    # TODO send random file
-    # photo_path = get_data()
-    # with open("/path/to/photo/", 'rb') as photo:
-    #     bot.send_document(chat_id, photo, reply_markup=markup)
-    return
+    filename = get_random_picture()
+    if filename == '':
+        bot.send_message(chat_id, 'Сегодня нет праздников :(', reply_markup=markup)
+        return
+    photo_path = Path(__file__).parent / "cache" / filename
+    video = check_if_video(photo_path)
+    if video:
+        with open(photo_path, 'rb') as video:
+            bot.send_video(chat_id, video, reply_markup=markup)
+    else:
+        try:
+            with open(photo_path, 'rb') as photo:
+                bot.send_photo(chat_id, photo, reply_markup=markup)
+        except ApiTelegramException:
+            photo_path.unlink()
+            send_file(chat_id, markup)
 
 
 def check_if_user_is_mailing(id_: int) -> bool:
     # TODO sqlite db
     return True
+
+def start_schedule_downloading() -> None:
+    schedule.every().day.at("00:10").do(download_todays_postcards)
 
 
 def start_step_handlers() -> None:
@@ -289,7 +274,7 @@ def start_nonestop_poling() -> None:
             sleep(5)
 
 
-# if __name__ == "__main__":
-#     Thread(target=start_step_handlers).start()
-
-#     Thread(target=start_nonestop_poling).start()
+if __name__ == "__main__":
+    Thread(target=start_step_handlers).start()
+    Thread(target=start_schedule_downloading).start()
+    Thread(target=start_nonestop_poling).start()
