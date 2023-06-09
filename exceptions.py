@@ -12,3 +12,6 @@ class NoResponseFromTheHolidaysPage(Exception):
 
 class NoResponseFromPicturesDownloadHref(Exception):
     pass
+
+class ImpossibleTime(Exception):
+    pass
