@@ -11,10 +11,11 @@ import requests
 from dataclasses import dataclass
 from pathlib import Path
 from pytube import YouTube
-from random import choice
+from random import choice, randint
 from telebot.apihelper import ApiTelegramException
 import schedule
 from exceptions import *
+import sqlite3
 
 TOKEN = os.getenv("TOKEN")
 bot = TeleBot(TOKEN)
@@ -47,15 +48,68 @@ def main(message: Message) -> None:
 
     if message_text == 'Поздравь меня🥳':
         send_file(chat_id, markup)
-        return
+        
     elif message_text == 'Ура!🎉':
         bot.send_message(chat_id, message_text, reply_markup=markup)
-        return
+        
     elif message_text == 'Подключить рассылку📬':
-        # TODO mailing
-        pass
-
-    bot.send_message(chat_id=chat_id, text="Test", reply_markup=markup)
+        markup = customize_markup(
+            "Поздравь меня🥳", "Ура!🎉", "Отключить рассылку📬")
+        if user_is_mailing:
+            bot.send_message(message.from_user.id, 'Ты уже подключил рассылку, шизофреник', reply_markup=markup)
+        else:
+            msg = bot.send_message(message.from_user.id, "Во сколько хотите получать рассылку? (Например: 07:00)", reply_markup=markup)
+            bot.register_next_step_handler(msg, mailing_time_setup)
+            
+    elif message_text == 'Отключить рассылку📬':
+        markup = customize_markup(
+            "Поздравь меня🥳", "Ура!🎉", "Подключить рассылку📬")
+        if not user_is_mailing:
+            bot.send_message(message.from_user.id, 'У тебя ее и так нет, лох', reply_markup=markup)
+        else:
+            remove_user_from_mailing(message.from_user.id)
+            bot.send_message(message.from_user.id, 'Рассылка отключена😈', reply_markup=markup)
+    
+def mailing_time_setup(message: Message) -> None:
+    markup = customize_markup(
+            "Поздравь меня🥳", "Ура!🎉", "Отключить рассылку📬")
+    msg = message.text
+    if msg in BUTTONS:
+        main(message=message)
+        return
+    try:
+        small_version = str( int( msg.replace(':', '') ) )
+        msg_legth = len(small_version)
+        if msg_legth < 3 or msg_legth > 5:
+            raise ImpossibleTime
+        if msg_legth == 3:
+            msg = '0' + small_version[0] + ':' + small_version[1:]
+        if int(msg[3:])>60 or int(msg[3:])<0 or int(msg[:2])>=24 or int(msg[:2])<0:
+            raise ImpossibleTime
+    except (ValueError, ImpossibleTime):
+        bot.send_message(message.from_user.id, f'Твое iq равно {str(randint(30, 60))}', reply_markup=markup)
+    else:
+        bot.send_message(message.from_user.id, f'Рассылка в {msg} успешно подключена🤙🤣🤣', reply_markup=markup)
+        add_user_to_mailing(message.from_user.id, message.chat.id, msg)
+        
+def remove_user_from_mailing(id_: int) -> None:
+    con = sqlite3.connect('instance/mailing.sqlite3')
+    cursor = con.cursor()
+    cursor.execute(f"""
+                   DELETE FROM mailing_users WHERE user_id={id_}
+                   """)
+    con.commit()
+    con.close()
+        
+def add_user_to_mailing(users_id: int, chat_id: int, time: str) -> None:
+    con = sqlite3.connect('instance/mailing.sqlite3')
+    cursor = con.cursor()
+    cursor.execute(f"""
+                   INSERT INTO mailing_users (user_id, chat_id, time)
+                   VALUES ({users_id}, {chat_id}, "{time}")
+                   """)
+    con.commit()
+    con.close()
 
 
 def customize_markup(*button_names) -> ReplyKeyboardMarkup:
@@ -202,8 +256,6 @@ def download_postcard_to_cache_folder(file_url: str) -> None:
         addition = file_url[-4:]
     filename = datetime.now().strftime("%Y_%m_%d_%H_%M_%S_%f") + addition
     current_path = Path(__file__).parent.resolve()
-    if not os.path.exists('cache'):
-        os.makedirs('cache')
     path_to_file = current_path / "cache" / filename
     with open(path_to_file, 'wb') as f:
         f.write(image)
@@ -250,14 +302,62 @@ def send_file(chat_id, markup) -> None:
         except ApiTelegramException:
             photo_path.unlink()
             send_file(chat_id, markup)
+            
+def create_db() -> None:
+    os.mkdir('instance')
+    con = sqlite3.connect('instance/mailing.sqlite3')
+    cursor = con.cursor()
+    cursor.execute("""
+                CREATE TABLE IF NOT EXISTS mailing_users (
+                    user_id INTEGER UNIQUE NOT NULL,
+                    chat_id INTEFER UNIQUE NOT NULL,
+                    time TEXT NOT NULL
+                )
+                """)
+    con.commit()
+    con.close()
 
-
-def check_if_user_is_mailing(id_: int) -> bool:
-    # TODO sqlite db
-    return True
-
-def start_schedule_downloading() -> None:
+# Downloading and checking mailing
+def start_schedule_tasks() -> None:
+    if not os.path.exists('instance'):
+        create_db()
+    if not os.path.exists('cache'):
+        os.mkdir('cache')
+        download_todays_postcards()
+    elif len(os.listdir('cache')) == 0:
+        download_todays_postcards()
     schedule.every().day.at("00:10").do(download_todays_postcards)
+    schedule.every().minute.do(start_mailing)
+    while True:
+        schedule.run_pending()
+
+def start_mailing() -> None:
+    current_time = datetime.today().strftime("%H:%M")
+    con = sqlite3.connect('instance/mailing.sqlite3')
+    cursor = con.cursor()
+    cursor.execute(f"""
+                   SELECT * FROM mailing_users
+                   """)
+    row = cursor.fetchall()
+    con.close()
+    
+    for user_id, chat_id, time in row:
+        markup = customize_markup(
+            "Поздравь меня🥳", "Ура!🎉", "Отключить рассылку📬")
+        if time == current_time:
+            send_file(chat_id=chat_id, markup=markup)
+    
+
+def check_if_user_is_mailing(id_: int=0) -> bool:
+    con = sqlite3.connect('instance/mailing.sqlite3')
+    cursor = con.cursor()
+    cursor.execute(f"""
+                   SELECT * FROM mailing_users WHERE user_id={id_}
+                   """)
+    row = cursor.fetchone()
+    con.close()
+    
+    return row is not None
 
 
 def start_step_handlers() -> None:
@@ -276,5 +376,5 @@ def start_nonestop_poling() -> None:
 
 if __name__ == "__main__":
     Thread(target=start_step_handlers).start()
-    Thread(target=start_schedule_downloading).start()
+    Thread(target=start_schedule_tasks).start()
     Thread(target=start_nonestop_poling).start()
