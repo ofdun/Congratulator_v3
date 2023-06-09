@@ -356,7 +356,7 @@ def start_schedule_tasks() -> None:
         download_todays_postcards()
     elif len(os.listdir('cache')) == 0:
         download_todays_postcards()
-    schedule.every().day.at("21:08").do(download_todays_postcards)
+    schedule.every().day.at("00:10").do(download_todays_postcards)
     schedule.every().minute.do(start_mailing)
     logging.info("schedule tasks were started")
     while True:
@@ -409,6 +409,11 @@ def setup_logging() -> None:
         os.mkdir('logs')
     logging.basicConfig(level=logging.INFO, filename='logs/logs.log',
                         format='%(asctime)s %(levelname)s %(message)s', encoding='UTF-8')
+    
+def inform_about_updates() -> None:
+    for chat_id in INFORM_ABOUT_UPDATES:
+        bot.send_message(chat_id, "переподпишись на рассылку и пропиши /start чтобы кнопки появились")
+    
 
 if __name__ == "__main__":
     setup_logging()
