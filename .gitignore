@@ -1,5 +1,6 @@
 .env
-__pycache__
-cache
-.handler-saves
-instance
+__pycache__/
+cache/
+.handler-saves/
+instance/
+logs/
