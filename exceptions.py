@@ -1,17 +1,20 @@
-class NoPictureAvailable(Exception):
+class NoPictureAvailableError(Exception):
     pass
 
-class NoResponseFromTheSite(Exception):
+class NoResponseFromTheSiteError(Exception):
     pass
 
-class NoResponseFromPicturesPage(Exception):
+class NoResponseFromPicturesPageError(Exception):
     pass
 
-class NoResponseFromTheHolidaysPage(Exception):
+class NoResponseFromTheHolidaysPageError(Exception):
     pass
 
-class NoResponseFromPicturesDownloadHref(Exception):
+class NoResponseFromPicturesDownloadHrefError(Exception):
     pass
 
-class ImpossibleTime(Exception):
+class ImpossibleTimeError(Exception):
+    pass
+
+class LoginRequiredError(Exception):
     pass
