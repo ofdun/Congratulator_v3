@@ -16,6 +16,7 @@ from telebot.apihelper import ApiTelegramException
 import schedule
 from exceptions import *
 import sqlite3
+import logging
 
 TOKEN = os.getenv("TOKEN")
 bot = TeleBot(TOKEN)
@@ -29,6 +30,7 @@ def start_message(message: Message) -> None:
     bot.send_message(
         chat_id=chat_id, text=WELCOME_MESSAGE.format(name=name), reply_markup=markup
     )
+    logging.info(f"start message send to a '{message.from_user.full_name}' whose id is = '{message.from_user.id}'")
 
 
 @bot.message_handler(content_types=["text"])
@@ -70,6 +72,8 @@ def main(message: Message) -> None:
             remove_user_from_mailing(message.from_user.id)
             bot.send_message(message.from_user.id, 'Рассылка отключена😈', reply_markup=markup)
     
+    logging.info(f"'{message.from_user.full_name}' whose id = '{user_id}' send message: '{message_text}'")
+    
 def mailing_time_setup(message: Message) -> None:
     markup = customize_markup(
             "Поздравь меня🥳", "Ура!🎉", "Отключить рассылку📬")
@@ -100,6 +104,8 @@ def remove_user_from_mailing(id_: int) -> None:
                    """)
     con.commit()
     con.close()
+    
+    logging.info(f"User {id_} unsubscribed from mailing")
         
 def add_user_to_mailing(users_id: int, chat_id: int, time: str) -> None:
     con = sqlite3.connect('instance/mailing.sqlite3')
@@ -108,8 +114,11 @@ def add_user_to_mailing(users_id: int, chat_id: int, time: str) -> None:
                    INSERT INTO mailing_users (user_id, chat_id, time)
                    VALUES ({users_id}, {chat_id}, "{time}")
                    """)
+    
     con.commit()
     con.close()
+    
+    logging.info(f"User {users_id} subscribed for mailing")
 
 
 def customize_markup(*button_names) -> ReplyKeyboardMarkup:
@@ -139,7 +148,7 @@ def get_all_todays_holidays_links() -> List[Holiday]:
     site = SITE_WITH_POSTCARDS_HREF
     response = requests.get(site)
     if response.status_code != 200:
-        print(
+        logging.error(
             f'Error while trying to get todays holidays! HTTP status code is {response.status_code}')
         raise NoResponseFromTheSite(f"HTTP status code = {response.status_code}")
 
@@ -156,6 +165,7 @@ def get_all_todays_holidays_links() -> List[Holiday]:
             href = tag.find('a').get('href')
             hrefs.append(Holiday(name=name_of_holiday, href=href))
 
+    logging.info("Todays holidays hrefs were successfully downloaded")
     return hrefs
 
 
@@ -195,7 +205,7 @@ def get_all_todays_postcards(todays_holidays: List[Holiday]) -> List[Postcard]:
     def get_picture_href_from_its_page(page_href: str) -> str:
         response = requests.get(page_href)
         if response.status_code != 200:
-            print(
+            logging.error(
                 f'Error while trying to get picture through its own page! HTTP status code is {response.status_code}')
             raise NoResponseFromPicturesPage(f"HTTP status code = {response.status_code}")
         soup = bs(response.content, 'html.parser')
@@ -212,7 +222,7 @@ def get_all_todays_postcards(todays_holidays: List[Holiday]) -> List[Postcard]:
         else:
             response = requests.get(todays_holiday.href)
         if response.status_code != 200:
-            print(
+            logging.error(
                 f'Error while trying to get todays pictures! HTTP status code is {response.status_code}')
             raise NoResponseFromTheHolidaysPage(f"HTTP status code = {response.status_code}")
         soup = bs(response.content, 'html.parser')
@@ -246,9 +256,9 @@ def get_todays_postcards_hrefs() -> List[Postcard]:
 def download_postcard_to_cache_folder(file_url: str) -> None:
     response = requests.get(file_url)
     if response.status_code != 200:
-        print(
+        logging.error(
             f'Error while downloading a picture! Http status code: {response.status_code}')
-        return NoResponseFromPicturesDownloadHref(f"HTTP status code = {response.status_code}")
+        raise NoResponseFromPicturesDownloadHref(f"HTTP status code = {response.status_code}")
     image = response.content
     if file_url[-4] != '.':
         addition = '.mp4'
@@ -259,6 +269,8 @@ def download_postcard_to_cache_folder(file_url: str) -> None:
     path_to_file = current_path / "cache" / filename
     with open(path_to_file, 'wb') as f:
         f.write(image)
+        
+    logging.info("Postcard was successfully downloaded")
 
 
 def download_all_postcards(todays_postcards: List[Postcard]) -> None:
@@ -266,8 +278,11 @@ def download_all_postcards(todays_postcards: List[Postcard]) -> None:
         download_postcard_to_cache_folder(postcard.href)
         
 def clear_postcards() -> None:
+    
     for filename in os.listdir('cache'):
         os.remove('cache/' + filename)
+    
+    logging.info("Postcards were successfully deleted")
 
 
 def download_todays_postcards() -> None:
@@ -275,9 +290,12 @@ def download_todays_postcards() -> None:
     todays_holidays_hrefs = get_all_todays_holidays_links()
     todays_postcards_hrefs = get_all_todays_postcards(todays_holidays_hrefs)
     download_all_postcards(todays_postcards_hrefs)
+
+    logging.info("Postcards were successfully downloaded!")
     
 def get_random_picture() -> str:
     if not os.listdir('cache/'):
+        logging.info("There is no holidays today :(")
         raise NoPictureAvailable("There is no holidays today :(")
     return choice([filename for filename in os.listdir('cache/')])
 
@@ -286,22 +304,23 @@ def check_if_video(path: Path) -> bool:
     return format_ in VIDEO_FORMATS
 
 def send_file(chat_id, markup) -> None:
-    filename = get_random_picture()
-    if filename == '':
+    try:
+        filename = get_random_picture()
+    except NoPictureAvailable:
         bot.send_message(chat_id, 'Сегодня нет праздников :(', reply_markup=markup)
-        return
-    photo_path = Path(__file__).parent / "cache" / filename
-    video = check_if_video(photo_path)
-    if video:
-        with open(photo_path, 'rb') as video:
-            bot.send_video(chat_id, video, reply_markup=markup)
     else:
-        try:
-            with open(photo_path, 'rb') as photo:
-                bot.send_photo(chat_id, photo, reply_markup=markup)
-        except ApiTelegramException:
-            photo_path.unlink()
-            send_file(chat_id, markup)
+        photo_path = Path(__file__).parent / "cache" / filename
+        video = check_if_video(photo_path)
+        if video:
+            with open(photo_path, 'rb') as video:
+                bot.send_video(chat_id, video, reply_markup=markup)
+        else:
+            try:
+                with open(photo_path, 'rb') as photo:
+                    bot.send_photo(chat_id, photo, reply_markup=markup)
+            except ApiTelegramException:
+                photo_path.unlink()
+                send_file(chat_id, markup)
             
 def create_db() -> None:
     os.mkdir('instance')
@@ -316,6 +335,8 @@ def create_db() -> None:
                 """)
     con.commit()
     con.close()
+    
+    logging.info("mailing_users database were successfully created")
 
 # Downloading and checking mailing
 def start_schedule_tasks() -> None:
@@ -328,6 +349,7 @@ def start_schedule_tasks() -> None:
         download_todays_postcards()
     schedule.every().day.at("00:10").do(download_todays_postcards)
     schedule.every().minute.do(start_mailing)
+    logging.info("schedule tasks were started")
     while True:
         schedule.run_pending()
 
@@ -360,7 +382,7 @@ def check_if_user_is_mailing(id_: int=0) -> bool:
     return row is not None
 
 
-def start_step_handlers() -> None:
+def setup_step_handlers() -> None:
     bot.enable_save_next_step_handlers()
     bot.load_next_step_handlers()
 
@@ -373,8 +395,14 @@ def start_nonestop_poling() -> None:
             print(e)
             sleep(5)
 
+def setup_logging() -> None:
+    if not os.path.exists('logs'):
+        os.mkdir('logs')
+    logging.basicConfig(level=logging.INFO, filename='logs/logs.log',
+                        format='%(asctime)s %(levelname)s %(message)s', encoding='UTF-8')
 
 if __name__ == "__main__":
-    Thread(target=start_step_handlers).start()
+    setup_logging()
+    setup_step_handlers()
     Thread(target=start_schedule_tasks).start()
     Thread(target=start_nonestop_poling).start()
