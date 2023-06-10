@@ -4,3 +4,4 @@ cache/
 .handler-saves/
 instance/
 logs/
+venv/
