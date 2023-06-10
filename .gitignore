@@ -5,3 +5,4 @@ cache/
 instance/
 logs/
 venv/
+secrets.py
