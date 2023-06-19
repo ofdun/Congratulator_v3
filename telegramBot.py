@@ -17,11 +17,9 @@ import schedule
 from exceptions import *
 import sqlite3
 import logging
+from secrets import TOKEN
 
-# TOKEN = os.getenv("TOKEN")
-TOKEN = "6114787188:AAH09geOf4nmHWRyQHV06rJMsBP6gKxRNl0"
 bot = TeleBot(TOKEN)
-
 
 @bot.message_handler(commands=["start", "help"])
 def start_message(message: Message) -> None:
@@ -421,6 +419,5 @@ def inform_about_updates() -> None:
 if __name__ == "__main__":
     setup_logging()
     setup_step_handlers()
-    # inform_about_updates()
     Thread(target=start_schedule_tasks).start()
     Thread(target=start_nonestop_poling).start()
