@@ -18,7 +18,8 @@ from exceptions import *
 import sqlite3
 import logging
 
-TOKEN = os.getenv("TOKEN")
+# TOKEN = os.getenv("TOKEN")
+TOKEN = "6114787188:AAH09geOf4nmHWRyQHV06rJMsBP6gKxRNl0"
 bot = TeleBot(TOKEN)
 
 
@@ -186,9 +187,7 @@ def get_number_of_pages(parsed_page: bs) -> int:
         return int(number_of_pages)
 
 
-def get_all_todays_postcards(todays_holidays: List[Holiday]) -> List[Postcard]:
-    number_of_pages = 1
-    
+def get_all_todays_postcards(todays_holidays: List[Holiday]) -> List[Postcard]:    
     def youtube_href_to_download_href(youtube_href: str) -> str:
         yt = YouTube(youtube_href)
         try:
@@ -245,10 +244,13 @@ def get_all_todays_postcards(todays_holidays: List[Holiday]) -> List[Postcard]:
             postcards.append(postcard)
 
         return postcards
+    
+    postcards: List[Holiday] = []
 
     for todays_holiday in todays_holidays:
-        postcards: List[Postcard] = get_postcards_hrefs_from_page(
-            todays_holiday=todays_holiday, first_use=True)
+        number_of_pages = 1
+        postcards.extend( get_postcards_hrefs_from_page(
+            todays_holiday=todays_holiday, first_use=True) )
         for page in range(2, number_of_pages + 1):
             postcards.extend(get_postcards_hrefs_from_page(
                 todays_holiday=todays_holiday, page=page))
@@ -401,6 +403,7 @@ def start_nonestop_poling() -> None:
         try:
             bot.polling(none_stop=True)
         except Exception as e:
+            logging.error(f"Stopped polling with error {e}")
             print(e)
             sleep(5)
 
@@ -413,11 +416,11 @@ def setup_logging() -> None:
 def inform_about_updates() -> None:
     for chat_id in INFORM_ABOUT_UPDATES:
         bot.send_message(chat_id, "переподпишись на рассылку и пропиши /start чтобы кнопки появились")
-    
+        
 
 if __name__ == "__main__":
     setup_logging()
     setup_step_handlers()
-    inform_about_updates()
+    # inform_about_updates()
     Thread(target=start_schedule_tasks).start()
     Thread(target=start_nonestop_poling).start()
